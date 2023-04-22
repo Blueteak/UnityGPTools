@@ -8,7 +8,7 @@ namespace OpenAI
 {
 static class OpenAIUtil
 {
-    public static string APIKey;
+    public static OpenAIConfig Config;
 
     public static RequestMessage CreateUserMessage(string prompt)
     {
@@ -18,17 +18,18 @@ static class OpenAIUtil
         return msg;
     }
     
-    static string CreateChatRequestBody(RequestMessage msg, List<OpenAI.RequestMessage> prevMessages, string systemMessage)
+    static string CreateChatRequestBody(RequestMessage msg, List<OpenAI.RequestMessage> prevMessages, string systemMessage, bool stream, float temperature=1)
     {
         var req = new OpenAI.Request();
-        req.model = "gpt-3.5-turbo";
-        req.stream = true;
-        req.temperature = 1;
+        req.model = Config.UseGPT4 ? "gpt-4" : "gpt-3.5-turbo";
+        req.stream = stream;
+        req.temperature = temperature;
 
         List<OpenAI.RequestMessage> messages = new List<RequestMessage>();
         if (prevMessages != null)
             foreach (var v in prevMessages)
                 messages.Add(v);
+        messages.Add(msg);
 
         if (systemMessage != null && systemMessage.Length > 0)
         {
@@ -38,60 +39,73 @@ static class OpenAIUtil
             messages.Add(sys);
         }
         
-        req.messages = messages.ToArray(); //new [] { msg };
+        req.messages = messages.ToArray();
 
-        Debug.Log("");
-        
         return JsonUtility.ToJson(req);
     }
 
-    public static UnityWebRequest InvokeChat(RequestMessage msg, List<OpenAI.RequestMessage> prevMessages, string systemMessage)
+    public static UnityWebRequest InvokeChat(RequestMessage msg, List<OpenAI.RequestMessage> prevMessages, string systemMessage, bool stream, float temp=1)
     {
-        var jsonVals = CreateChatRequestBody(msg, prevMessages, systemMessage);
-        Debug.Log("Sending Chat JSON: " + jsonVals);
+        if (Config == null)
+            GetConfig();
+
+        if (Config == null)
+        {
+            Debug.LogError("No OpenAI Config exists - please create one!");
+            return null;
+        }
+        
+        var jsonVals = CreateChatRequestBody(msg, prevMessages, systemMessage, stream, temp);
 
         // POST
+        /*
+        UnityWebRequest post;
+        if (stream)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(jsonVals);
+            post = UnityWebRequest.Put(OpenAI.Api.Url, bytes);//, "application/json");
+            post.method = "POST";
+            post.downloadHandler = new DownloadHandlerBuffer();
+        }
+        else
+        {
+            post = UnityWebRequest.Post(OpenAI.Api.Url, jsonVals);
+        }
+        */
         var bytes = System.Text.Encoding.UTF8.GetBytes(jsonVals);
         var post = UnityWebRequest.Put(OpenAI.Api.Url, bytes);//, "application/json");
         post.method = "POST";
-        post.SetRequestHeader("Content-Type", "application/json");
-        
-        //Buffer?
         post.downloadHandler = new DownloadHandlerBuffer();
+        
+        post.SetRequestHeader("Content-Type", "application/json");
         
         // Request timeout setting
         post.timeout = 0;
 
         // API key authorization
-        string key = GetAPIKey();
+        string key = Config.APIKey;
         post.SetRequestHeader("Authorization", "Bearer " + key);
         
         return post;
     }
 
-    public static string GetAPIKey()
-    {
-        if (APIKey != null && APIKey.Length > 1)
-            return APIKey;
+     static void GetConfig() 
+     {
+        if (Config != null) 
+            return;
         
         var configs = AssetDatabase.FindAssets("t:OpenAIConfig");
-        if (configs.Length > 0)
-        {
-            var config = (OpenAIConfig)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(configs[0]), typeof(OpenAIConfig));
-            APIKey = config.APIKey;
-            if (APIKey.Length == 0)
-                Debug.LogError("API Key not set, you'll need one from OpenAI for this tool to work!");
-        }
-        else
-            Debug.LogError("No OpenAI Config exists for API Key - please create one!");
-
-        return APIKey;
+        if (configs.Length == 0)
+            return;
+        
+        Config = (OpenAIConfig)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(configs[0]), typeof(OpenAIConfig));
+        if (Config.APIKey.Length == 0)
+            Debug.LogError("API Key not set, you'll need one from OpenAI for this to work!");
     }
 
     public static string ParseData(UnityWebRequest post)
     {
         var json = post.downloadHandler.text;
-        Debug.Log("Parsing Data:" + json);
         var data = JsonUtility.FromJson<OpenAI.Response>(json);
         return data.choices[0].message.content;
     }
