@@ -18,3 +18,10 @@ Tested with Unity 2021.3
 ![Gradient Generator Window](https://github.com/Blueteak/UnityGPTools/blob/main/ReadmeImages/GradientTool.png?raw=true)
 
 Generates a Unity Gradient from a prompt. Both the prompt and temp(erature) affect the resulting colors from GPT, while the Soft Gradient checkbox determines how the colors are organized in the gradient object.
+
+## Chat Box
+![Chat Box Window](https://github.com/Blueteak/UnityGPTools/blob/main/ReadmeImages/ChatWindow.png?raw=true)
+
+A simple interface for using ChatGPT like you would on the website. This uses data streaming to generate the text token-by-token in realtime, just like the site does! Each message sends the **entire** message chain to the API (this is how followup questions retain context), which means each followup question sent is more expensive.
+
+It also allows selecting text from the AI responses in case you want to copy/paste from it.
