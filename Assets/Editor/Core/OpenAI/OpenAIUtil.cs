@@ -12,9 +12,11 @@ static class OpenAIUtil
 
     public static RequestMessage CreateUserMessage(string prompt)
     {
-        var msg = new OpenAI.RequestMessage();
-        msg.role = "user";
-        msg.content = prompt;
+        var msg = new OpenAI.RequestMessage
+        {
+            role = "user",
+            content = prompt
+        };
         return msg;
     }
     
@@ -131,10 +133,8 @@ static class OpenAIUtil
             var data = JsonUtility.FromJson<OpenAI.ResponseChunk>(v);
             if(data.choices.Length == 0 || data.choices[0].delta.content == null)
                 continue;
-            Debug.Log(data.choices[0].delta.content);
             full.Append(data.choices[0].delta.content);
         }
-
         return (full.ToString(), isDone);
     }
 }

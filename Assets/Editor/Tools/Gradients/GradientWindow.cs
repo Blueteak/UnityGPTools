@@ -59,10 +59,11 @@ public class GradientWindow : OdinEditorWindow
     string RGBPattern = @"\((\d+,\s*\d+,\s*\d+)\)";
     string HexPattern = @"#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})";
     
-    [MenuItem("Tools/GPT/Gradient Creator")]
+    [MenuItem("Tools/GPT/Gradient Generator")]
     private static void OpenWindow()
     {
         var window = GetWindow<GradientWindow>();
+        window.titleContent = new GUIContent("Gradient Generator");
         window.Show();
     }
 
@@ -98,6 +99,7 @@ public class GradientWindow : OdinEditorWindow
     void RequestCompleted()
     {
         var output = OpenAIUtil.ParseData(request);
+        request.Dispose();
         request = null;
 
         MatchCollection matches = Regex.Matches(output, UseRGB ? RGBPattern : HexPattern);
