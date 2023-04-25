@@ -26,7 +26,7 @@ A simple interface for using ChatGPT like you would on the website. This uses da
 
 It also allows selecting text from the AI responses in case you want to copy/paste from it.
 
-## Regex Patter Generator
+## Regex Pattern Generator
 ![Regular Expression Generator Window](https://github.com/Blueteak/UnityGPTools/blob/main/ReadmeImages/RegexBuilder.png?raw=true)
 
 This one is a bit hit-or-miss, but it's really great when it works! Just input a full text sample and the desired regex-patter-match output and hit generate. 
