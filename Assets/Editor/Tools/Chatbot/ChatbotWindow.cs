@@ -23,15 +23,15 @@ public class ChatbotWindow : OdinEditorWindow
 
     private UnityWebRequest request;
     
-     [MenuItem("Tools/GPT/Chat Window")]
+    [MenuItem("Tools/GPT/Chat Window")]
     private static void OpenWindow()
     {
         var window = GetWindow<ChatbotWindow>();
         window.titleContent = new GUIContent("Chat GPT");
         window.Show();
     }
-
-    [Button]
+    
+    [Button(ButtonSizes.Medium)]
     [ShowIf("@request == null")]
     public void Send()
     {
